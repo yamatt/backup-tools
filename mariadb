@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# modify the following to suit your environment
+NAME="mariadb"
+
+if [[ -z "$1" ]]; then
+	BACKUP_PATH="/var/backups/bitfolk"
+else
+	BACKUP_PATH="$1"
+fi
+
+ENC_KEY_FILE="/var/backups/bitfolk/key.txt"
+ENC_TYPE="aes-256-cbc"
+
+DB_BACKUP_PATH="$BACKUP_PATH/`date +%Y-%m-%d`-$NAME.bz2"
+DB_BACKUP_ENCRYPTED_PATH="$BACKUP_PATH/rsync/`date +%Y-%m-%d`-$NAME.bz2.$ENC_TYPE"
+DB_USER="root"
+DB_PASSWD=""
+
+echo "* Creating new $NAME backup to $DB_BACKUP_PATH"
+mysqldump --user=$DB_USER --password=$DB_PASSWD --all-databases | bzip2 > "$DB_BACKUP_PATH"
+openssl "$ENC_TYPE" -salt -in "$DB_BACKUP_PATH" -out "$DB_BACKUP_ENCRYPTED_PATH" -kfile "$ENC_KEY_FILE"
+echo "Done"
+exit 0

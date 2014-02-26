@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# modify the following to suit your environment
+NAME="static"
+
+if [[ -z "$1" ]]; then
+	BACKUP_PATH="/var/backups/bitfolk"
+else
+	BACKUP_PATH="$1"
+fi
+
+ENC_KEY_FILE="/var/backups/bitfolk/key.txt"
+ENC_TYPE="aes-256-cbc"
+
+STATIC_FILE_LIST="/var/backups/bitfolk/static-files.txt"
+STATIC_BACKUP_PATH="$BACKUP_PATH/$NAME"
+STATIC_BACKUP_ARCHIVE="$BACKUP_PATH/`date +%Y-%m-%d`-$NAME.tgz"
+STATIC_BACKUP_ENCRYPTED="$BACKUP_PATH/rsync/`date +%Y-%m-%d`-$NAME.tgz.$ENC_TYPE"
+
+echo "* Creating new $NAME backup to $DB_BACKUP_PATH"
+mkdir -p "$STATIC_BACKUP_PATH/"
+# COPY files from list in file to location
+while read file_path; do
+	cp -r "$file_path" "$STATIC_BACKUP_PATH/"
+done < "$STATIC_FILE_LIST"
+tar zcf "$STATIC_BACKUP_ARCHIVE" "$STATIC_BACKUP_PATH"
+openssl "$ENC_TYPE" -salt -in "$STATIC_BACKUP_ARCHIVE" -out "$STATIC_BACKUP_ENCRYPTED" -kfile "$ENC_KEY_FILE"
+echo "Done"
+exit 0

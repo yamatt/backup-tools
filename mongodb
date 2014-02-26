@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# modify the following to suit your environment
+NAME="mongodb"
+
+if [[ -z "$1" ]]; then
+	BACKUP_PATH="/var/backups/bitfolk"
+else
+	BACKUP_PATH="$1"
+fi
+
+ENC_KEY_FILE="/var/backups/bitfolk/key.txt"
+ENC_TYPE="aes-256-cbc"
+
+DB_BACKUP_PATH="$BACKUP_PATH/$NAME"
+DB_BACKUP_ARCHIVE="$BACKUP_PATH/`date +%Y-%m-%d`-$NAME.tgz"
+DB_BACKUP_ENCRYPTED="$BACKUP_PATH/rsync/`date +%Y-%m-%d`-$NAME.tgz.$ENC_TYPE"
+
+echo "* Creating new $NAME backup to $DB_BACKUP_PATH"
+mongodump --out="$DB_BACKUP_PATH"
+tar zcf "$DB_BACKUP_ARCHIVE" "$DB_BACKUP_PATH"
+openssl "$ENC_TYPE" -salt -in "$DB_BACKUP_ARCHIVE" -out "$DB_BACKUP_ENCRYPTED" -kfile "$ENC_KEY_FILE"
+#echo "openssl enc $ENC_TYPE -salt -in $DB_BACKUP_ARCHIVE -out $DB_BACKUP_ENCRYPTED -kfile $ENC_KEY_FILE"
+echo "Done"
+exit 0

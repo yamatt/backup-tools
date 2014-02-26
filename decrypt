@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# modify the following to suit your environment
+
+ENC_KEY_FILE="/var/backups/bitfolk/key.txt"
+ENC_TYPE="aes-256-cbc"
+
+if [ -z $1 ]; then
+	echo "No file to decrypt."
+	exit 1
+fi
+
+IN_PATH="$1"
+OUT_PATH=${IN_PATH%."$ENC_TYPE"}
+
+openssl "$ENC_TYPE" -d -salt -in "$IN_PATH" -out "$OUT_PATH" -kfile "$ENC_KEY_FILE"
+exit 0
